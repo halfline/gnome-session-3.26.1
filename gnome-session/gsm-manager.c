@@ -1287,7 +1287,7 @@ query_save_session_complete (GsmManager *manager)
                 manager->priv->query_timeout_id = 0;
         }
 
-        gsm_session_save (manager->priv->clients, &error);
+        gsm_session_save (manager->priv->clients, manager->priv->session_name, &error);
 
         if (error) {
                 g_warning ("Error saving session: %s", error->message);
@@ -1553,6 +1553,23 @@ _gsm_manager_get_default_session (GsmManager     *manager)
 {
         return g_settings_get_string (manager->priv->session_settings,
                                       KEY_SESSION_NAME);
+}
+
+char *
+_gsm_manager_get_saved_session (GsmManager     *manager)
+{
+        char *file;
+        char *type;
+        gboolean loaded;
+
+        file = g_build_filename (gsm_util_get_saved_session_dir (), "type", NULL);
+        loaded = g_file_get_contents (file, &type, NULL, NULL);
+        g_free (file);
+
+        if (!loaded)
+                return NULL;
+
+        return type;
 }
 
 void
@@ -1973,7 +1990,7 @@ maybe_save_session (GsmManager *manager)
         }
 
         error = NULL;
-        gsm_session_save (manager->priv->clients, &error);
+        gsm_session_save (manager->priv->clients, manager->priv->session_name, &error);
 
         if (error) {
                 g_warning ("Error saving session: %s", error->message);

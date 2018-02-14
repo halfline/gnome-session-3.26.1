@@ -146,7 +146,16 @@ create_manager (void)
         g_unix_signal_add (SIGUSR2, sigusr2_cb, manager);
 
         if (IS_STRING_EMPTY (session_name)) {
-                session_name = _gsm_manager_get_default_session (manager);
+                char *saved_session_name;
+
+                saved_session_name = _gsm_manager_get_saved_session (manager);
+
+                if (IS_STRING_EMPTY (saved_session_name))
+                        session_name = _gsm_manager_get_default_session (manager);
+                else
+                        session_name = g_steal_pointer (&saved_session_name);
+
+                g_free (saved_session_name);
         }
 
         if (!gsm_session_fill (manager, session_name)) {
