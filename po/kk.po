@@ -1,0 +1,404 @@
+# Kazakh translation for gnome-session.
+# Copyright (C) 2013 gnome-session's COPYRIGHT HOLDER
+# This file is distributed under the same license as the gnome-session package.
+# Baurzhan Muftakhidinov <baurthefirst@gmail.com>, 2013.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gnome-session master\n"
+"Report-Msgid-Bugs-To: https://bugzilla.gnome.org/enter_bug.cgi?product=gnome-"
+"session&keywords=I18N+L10N&component=general\n"
+"POT-Creation-Date: 2017-06-21 22:12+0000\n"
+"PO-Revision-Date: 2017-06-22 19:40+0500\n"
+"Last-Translator: Baurzhan Muftakhidinov <baurthefirst@gmail.com>\n"
+"Language-Team: Kazakh <kk_KZ@googlegroups.com>\n"
+"Language: kk\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Poedit 1.8.12\n"
+
+#: ../data/gnome-custom-session.desktop.in.h:1
+msgid "Custom"
+msgstr "Таңдауыңызша"
+
+#: ../data/gnome-custom-session.desktop.in.h:2
+msgid "This entry lets you select a saved session"
+msgstr "Бұл элемент сізге сақталып тұрған сессияны таңдауға рұқсат етеді"
+
+#: ../data/gnome.desktop.in.h:1 ../data/gnome.session.desktop.in.in.h:1
+msgid "GNOME"
+msgstr "GNOME"
+
+#: ../data/gnome.desktop.in.h:2 ../data/gnome-xorg.desktop.in.h:2
+msgid "This session logs you into GNOME"
+msgstr "Бұл сессия арқылы GNOME-ға кіресіз"
+
+#: ../data/gnome-xorg.desktop.in.h:1
+msgid "GNOME on Xorg"
+msgstr "Xorg негізіндегі GNOME"
+
+#: ../data/gnome-dummy.session.desktop.in.in.h:1
+msgid "GNOME dummy"
+msgstr "GNOME жалған сессиясы"
+
+#: ../data/session-selector.ui.h:1
+msgid "Custom Session"
+msgstr "Таңдауыңызша сесия"
+
+#: ../data/session-selector.ui.h:2 ../tools/gnome-session-selector.c:102
+msgid "Please select a custom session to run"
+msgstr "Жөнелту үшін таңдауыңызша сессияны таңдаңыз"
+
+#: ../data/session-selector.ui.h:3
+msgid "_New Session"
+msgstr "Ж_аңа сессия"
+
+#: ../data/session-selector.ui.h:4
+msgid "_Remove Session"
+msgstr "Сессияны ө_шіру"
+
+#: ../data/session-selector.ui.h:5
+msgid "Rena_me Session"
+msgstr "Сессия атауын өз_герту"
+
+#: ../data/session-selector.ui.h:6
+msgid "_Continue"
+msgstr "Жалға_стыру"
+
+#: ../gnome-session/gsm-fail-whale-dialog.c:313
+msgid "Oh no!  Something has gone wrong."
+msgstr "Қап! Бір нәрсе қате кетті."
+
+#: ../gnome-session/gsm-fail-whale-dialog.c:320
+msgid ""
+"A problem has occurred and the system can’t recover. Please contact a system "
+"administrator"
+msgstr ""
+"Мәселе орын алды және жүйе өз қалпына келе алмады. Жүйелік әкімшіңізге "
+"хабарласыңыз"
+
+#: ../gnome-session/gsm-fail-whale-dialog.c:322
+msgid ""
+"A problem has occurred and the system can’t recover. All extensions have "
+"been disabled as a precaution."
+msgstr ""
+"Мәселе орын алды және жүйе өз қалпына келе алмады. Барлық кеңейтулер сақтық "
+"мақсатында сөндірілген."
+
+#: ../gnome-session/gsm-fail-whale-dialog.c:324
+msgid ""
+"A problem has occurred and the system can’t recover.\n"
+"Please log out and try again."
+msgstr ""
+"Мәселе орын алды және жүйе өз қалпына келе алмады.\n"
+"Жүйеден шығып, қайталап көріңіз."
+
+#: ../gnome-session/gsm-fail-whale-dialog.c:339
+msgid "_Log Out"
+msgstr "Жүйеден ш_ығу"
+
+#: ../gnome-session/gsm-fail-whale-dialog.c:361 ../gnome-session/main.c:281
+msgid "Enable debugging code"
+msgstr "Жөндеу кодын іске қосу"
+
+#: ../gnome-session/gsm-fail-whale-dialog.c:362
+msgid "Allow logout"
+msgstr "Жүйеден шығуды рұқсат ету"
+
+#: ../gnome-session/gsm-fail-whale-dialog.c:363
+msgid "Show extension warning"
+msgstr "Кеңейту ескертуін көрсету"
+
+#: ../gnome-session/gsm-manager.c:1318 ../gnome-session/gsm-manager.c:1971
+msgid "Not responding"
+msgstr "Жауап бермейді"
+
+#: ../gnome-session/gsm-util.c:382
+msgid "_Log out"
+msgstr "Жүйеден _шығу"
+
+#. It'd be really surprising to reach this code: if we're here,
+#. * then the XSMP client already has set several XSMP
+#. * properties. But it could still be that SmProgram is not set.
+#.
+#: ../gnome-session/gsm-xsmp-client.c:557
+msgid "Remembered Application"
+msgstr "Есте сақталған қолданбалар"
+
+#: ../gnome-session/gsm-xsmp-client.c:1207
+msgid "This program is blocking logout."
+msgstr "Бұл бағдарлама жүйеден шығуды болдырмай тұр."
+
+#: ../gnome-session/gsm-xsmp-server.c:340
+msgid ""
+"Refusing new client connection because the session is currently being shut "
+"down\n"
+msgstr "Жаңа клиенттік байланысын тайдыру, өйткені жүйе қазір сөндірілуде\n"
+
+#: ../gnome-session/gsm-xsmp-server.c:609
+#, c-format
+msgid "Could not create ICE listening socket: %s"
+msgstr "ICE тындаушы сокетін жасау мүмкін емес: %s"
+
+#: ../gnome-session/main.c:279
+msgid "Override standard autostart directories"
+msgstr "Стандартты іске қосылу бумалардың орнына басқаларды қолдану"
+
+#: ../gnome-session/main.c:279
+msgid "AUTOSTART_DIR"
+msgstr "АВТОІСКЕҚОСЫЛУ_БУМАСЫ"
+
+#: ../gnome-session/main.c:280
+msgid "Session to use"
+msgstr "Қолдану үшін сессия"
+
+#: ../gnome-session/main.c:280
+msgid "SESSION_NAME"
+msgstr "СЕССИЯ_АТЫ"
+
+#: ../gnome-session/main.c:282
+msgid "Do not load user-specified applications"
+msgstr "Пайдаланушыға тән қолданбаларды жөнелтпеу"
+
+#: ../gnome-session/main.c:283
+msgid "Version of this application"
+msgstr "Осы қолданбаның нұсқасы"
+
+#. Translators: the 'fail whale' is the black dialog we show when something goes seriously wrong
+#: ../gnome-session/main.c:285
+msgid "Show the fail whale dialog for testing"
+msgstr "Сынау үшін \"fail whale\" сұхбатын көрсету"
+
+#: ../gnome-session/main.c:286
+msgid "Disable hardware acceleration check"
+msgstr "Құрылғылық үдетуді тексеруді сөндіру"
+
+#: ../gnome-session/main.c:318
+msgid " — the GNOME session manager"
+msgstr " — GNOME сессиялар басқарушысы"
+
+#: ../tools/gnome-session-inhibit.c:108
+#, c-format
+msgid ""
+"%s [OPTION…] COMMAND\n"
+"\n"
+"Execute COMMAND while inhibiting some session functionality.\n"
+"\n"
+"  -h, --help        Show this help\n"
+"  --version         Show program version\n"
+"  --app-id ID       The application id to use\n"
+"                    when inhibiting (optional)\n"
+"  --reason REASON   The reason for inhibiting (optional)\n"
+"  --inhibit ARG     Things to inhibit, colon-separated list of:\n"
+"                    logout, switch-user, suspend, idle, automount\n"
+"  --inhibit-only    Do not launch COMMAND and wait forever instead\n"
+"\n"
+"If no --inhibit option is specified, idle is assumed.\n"
+msgstr ""
+"%s [ОПЦИЯ…] КОМАНДА\n"
+"\n"
+"КОМАНДАНЫ орындау, сонымен қатар сессияның кейбір мүмкіндіктерін ұстап, "
+"болдырмау.\n"
+"\n"
+"  -h, --help        Бұл көмекті көрсету\n"
+"  --version         Бағдарлама нұсқасын көрсету\n"
+"  --app-id ID       Сессияны ұстау кезінде қолданылатын\n"
+"                    қолданба id-і (қосымша түрде)\n"
+"  --reason REASON   Ұстау себебі (қосымша түрде)\n"
+"  --inhibit ARG     Ұсталатын нәрсе, келесіден тұратын үтірлермен ажыратыған "
+"тізім:\n"
+"                    logout, switch-user, suspend, idle, automount\n"
+"  --inhibit-only    КОМАНДАны орындамау, орнына тек мәңгі күту\n"
+"\n"
+"Егер --inhibit опциясы көрсетілмесе, бос етіп есептеледі.\n"
+
+#: ../tools/gnome-session-inhibit.c:146
+#, c-format
+msgid "Failed to execute %s\n"
+msgstr "%s жөнелту сәтсіз\n"
+
+#: ../tools/gnome-session-inhibit.c:206 ../tools/gnome-session-inhibit.c:216
+#: ../tools/gnome-session-inhibit.c:226
+#, c-format
+msgid "%s requires an argument\n"
+msgstr "%s аргументті талап етеді\n"
+
+#: ../tools/gnome-session-selector.c:61
+#, c-format
+msgid "Session %d"
+msgstr "Сессия %d"
+
+#: ../tools/gnome-session-selector.c:107
+msgid ""
+"Session names are not allowed to start with “.” or contain “/” characters"
+msgstr ""
+"Сессия атауы \".\" таңбасынан басталмауы және құрамында \"/\" таңбасы "
+"болмауы тиіс"
+
+#: ../tools/gnome-session-selector.c:111
+msgid "Session names are not allowed to start with “.”"
+msgstr "Сессия атауы \".\" таңбасынан басталмауы тиіс"
+
+#: ../tools/gnome-session-selector.c:115
+msgid "Session names are not allowed to contain “/” characters"
+msgstr "Сессия атауында \"/\" таңбасы болмауы тиіс"
+
+#: ../tools/gnome-session-selector.c:123
+#, c-format
+msgid "A session named “%s” already exists"
+msgstr "\"%s\" атауы бар сессия бар болып тұр"
+
+#: ../tools/gnome-session-quit.c:50
+msgid "Log out"
+msgstr "Жүйеден шығу"
+
+#: ../tools/gnome-session-quit.c:51
+msgid "Power off"
+msgstr "Сөндіру"
+
+#: ../tools/gnome-session-quit.c:52
+msgid "Reboot"
+msgstr "Қайта қосу"
+
+#: ../tools/gnome-session-quit.c:53
+msgid "Ignoring any existing inhibitors"
+msgstr "Кез-келген бар болып тұрған ингибиторларды елемеу"
+
+#: ../tools/gnome-session-quit.c:54
+msgid "Don’t prompt for user confirmation"
+msgstr "Пайдаланушы растауын сұрамау"
+
+#: ../tools/gnome-session-quit.c:88 ../tools/gnome-session-quit.c:102
+msgid "Could not connect to the session manager"
+msgstr "Сессиялар басқарушысына байланысты орнату мүмкін емес"
+
+#: ../tools/gnome-session-quit.c:198
+msgid "Program called with conflicting options"
+msgstr "Бағдарлама өазара ерегісетін опциялармен шақырылды"
+
+#~ msgid "Additional startup _programs:"
+#~ msgstr "Қосымша іске қосылатын бағ_дарламалар:"
+
+#~ msgid "Startup Programs"
+#~ msgstr "Іске қосылатын бағдарламалар"
+
+#~ msgid "_Automatically remember running applications when logging out"
+#~ msgstr "Жүйеден шыққан кезде орындалып жатқан қолданбаларды е_сте сақтау"
+
+#~ msgid "_Remember Currently Running Applications"
+#~ msgstr "Ағымдағы орындалып жатқан қолданбаларды ес_те сақтау"
+
+#~ msgid "Options"
+#~ msgstr "Опциялар"
+
+#~ msgid "Browse…"
+#~ msgstr "Шолу…"
+
+#~ msgid "Comm_ent:"
+#~ msgstr "Түсі_ндірме:"
+
+#~ msgid "Co_mmand:"
+#~ msgstr "Ко_манда:"
+
+#~ msgid "_Name:"
+#~ msgstr "_Аты:"
+
+#~ msgid "This session logs you into GNOME, using Wayland"
+#~ msgstr "Бұл сессия арқылы Wayland негізіндегі GNOME ішіне кіресіз"
+
+#~ msgid "Select Command"
+#~ msgstr "Команданы таңдаңыз"
+
+#~ msgid "Add Startup Program"
+#~ msgstr "Іске қосылатын бағдарламаны қосу"
+
+#~ msgid "Edit Startup Program"
+#~ msgstr "Іске қосылатын бағдарламаны түзету"
+
+#~ msgid "The startup command cannot be empty"
+#~ msgstr "Іске қосылатын команда бос болмауы тиіс"
+
+#~ msgid "The startup command is not valid"
+#~ msgstr "Іске қосылатын команда дұрыс емес"
+
+#~ msgid "Enabled"
+#~ msgstr "Іске қосулы"
+
+#~ msgid "Icon"
+#~ msgstr "Таңбаша"
+
+#~ msgid "Program"
+#~ msgstr "Бағдарлама"
+
+#~ msgid "Startup Applications Preferences"
+#~ msgstr "Іске қосылатын қолданба баптаулары"
+
+#~ msgid "No name"
+#~ msgstr "Аты жоқ"
+
+#~ msgid "No description"
+#~ msgstr "Анықтамасы жоқ"
+
+#~ msgid "Could not display help document"
+#~ msgstr "Көмек құжатын көрсету мүмкін емес"
+
+#~ msgid "Startup Applications"
+#~ msgstr "Іске қосылатын қолданбалар"
+
+#~ msgid "Choose what applications to start when you log in"
+#~ msgstr ""
+#~ "Сіз жүйеге кіргенде қандай қолданбалар автоматты түрде іске қосылатынын "
+#~ "таңдаңыз"
+
+#~ msgid "File is not a valid .desktop file"
+#~ msgstr "Файл дұрыс .desktop файлы емес"
+
+#~ msgid "Unrecognized desktop file Version '%s'"
+#~ msgstr "Белгісіз desktop файлдың нұсқасы '%s'"
+
+#~ msgid "Starting %s"
+#~ msgstr "Іске қосу %s"
+
+#~ msgid "Application does not accept documents on command line"
+#~ msgstr "Қолданба команда жолында құжаттарды қабылдамайды"
+
+#~ msgid "Unrecognized launch option: %d"
+#~ msgstr "Белгісіз жөнелту опциясы: %d"
+
+#~ msgid "Can't pass document URIs to a 'Type=Link' desktop entry"
+#~ msgstr "Құжат URI-ін 'Type=Link' desktop элементіне беру мүмкін емес"
+
+#~ msgid "Not a launchable item"
+#~ msgstr "Жөнелтілетін элемент емес"
+
+#~ msgid "Disable connection to session manager"
+#~ msgstr "Сессиялар басқарушысына байланыстарды сөндіру"
+
+#~ msgid "Specify file containing saved configuration"
+#~ msgstr "Сақталған баптаулары бар файлды көрсету"
+
+#~ msgid "FILE"
+#~ msgstr "ФАЙЛ"
+
+#~ msgid "Specify session management ID"
+#~ msgstr "Сессия басқарушысы ID-ін көрсету"
+
+#~ msgid "ID"
+#~ msgstr "ID"
+
+#~ msgid "Session management options:"
+#~ msgstr "Сессияны басқару опциялары:"
+
+#~ msgid "Show session management options"
+#~ msgstr "Сессия басқарушысы опцияларын көрсету"
+
+#~ msgid "Some programs are still running:"
+#~ msgstr "Кейбір бағдарламалар әлі де орындалып жатыр:"
+
+#~ msgid "Unknown"
+#~ msgstr "Белгісіз"
+
+#~ msgid "A program is still running:"
+#~ msgstr "Бағдарлама әлі орындалып жатыр:"
