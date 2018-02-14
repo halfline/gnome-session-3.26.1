@@ -1,4 +1,19 @@
 #! /bin/sh
 
 gnome-session-selector
-exec gnome-session
+
+type_file="${XDG_CONFIG_HOME:-$HOME/.config}/gnome-session/saved-session/type"
+
+session_type=""
+if [ -e "$type_file" ]; then
+        read session_type < "$type_file"
+fi
+
+session_type_argument=""
+[ -n "$session_type" ] && session_type_argument="--session=$session_type"
+
+if [ "$session_type" = "gnome-classic" ]; then
+        export GNOME_SHELL_SESSION_MODE="classic"
+fi
+
+exec gnome-session "$session_type_argument"
