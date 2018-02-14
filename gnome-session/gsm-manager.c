@@ -1855,7 +1855,6 @@ maybe_save_session (GsmManager *manager)
         }
 
         if (!auto_save_is_enabled (manager)) {
-                gsm_session_save_clear ();
                 return;
         }
 
