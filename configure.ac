@@ -78,6 +78,7 @@ AM_CONDITIONAL(HAVE_OLD_UPOWER, test x$have_old_upower = xyes)
 PKG_CHECK_MODULES(SESSION_PROPERTIES,
         glib-2.0 >= $GLIB_REQUIRED
         gtk+-3.0 >= $GTK3_REQUIRED
+        dbus-glib-1 >= $DBUS_GLIB_REQUIRED
 )
 
 PKG_CHECK_MODULES(X11, x11)

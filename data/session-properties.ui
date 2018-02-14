@@ -160,6 +160,7 @@
             <property name="can_focus">False</property>
             <child>
               <object class="GtkButton" id="session_properties_save_button">
+                <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <child>
@@ -206,6 +207,17 @@
             <property name="expand">False</property>
             <property name="fill">False</property>
             <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="session_properties_session_saved_label">
+            <property name="visible">True</property>
+            <property name="wrap">True</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">2</property>
           </packing>
         </child>
       </object>

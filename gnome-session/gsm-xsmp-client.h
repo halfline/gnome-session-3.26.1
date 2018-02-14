@@ -54,7 +54,8 @@ struct _GsmXSMPClientClass
                                           const char     *client_id);
         gboolean (*logout_request)       (GsmXSMPClient  *client,
                                           gboolean        prompt);
-
+        gboolean (*save_request)         (GsmXSMPClient  *client,
+                                          gboolean        prompt);
 
         void     (*saved_state)          (GsmXSMPClient  *client);
 

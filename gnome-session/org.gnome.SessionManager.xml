@@ -282,6 +282,14 @@
       </doc:doc>
     </method>
 
+    <method name="SaveSession">
+      <doc:doc>
+	<doc:description>
+	  <doc:para>Request to save session</doc:para>
+	</doc:description>
+      </doc:doc>
+    </method>
+
     <method name="CanShutdown">
       <arg name="is_available" direction="out" type="b">
         <doc:doc>

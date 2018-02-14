@@ -541,6 +541,16 @@ gsm_client_disconnected (GsmClient *client)
         g_signal_emit (client, signals[DISCONNECTED], 0);
 }
 
+gboolean
+gsm_client_request_save (GsmClient *client,
+                         guint      flags,
+                         GError   **error)
+{
+        g_return_val_if_fail (GSM_IS_CLIENT (client), FALSE);
+
+        return GSM_CLIENT_GET_CLASS (client)->impl_request_save (client, flags, error);
+}
+
 GKeyFile *
 gsm_client_save (GsmClient *client,
                  GError   **error)

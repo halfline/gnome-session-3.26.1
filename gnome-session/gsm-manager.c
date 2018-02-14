@@ -81,6 +81,7 @@
  * let's make this fairly long.
  */
 #define GSM_MANAGER_PHASE_TIMEOUT 90 /* seconds */
+#define GSM_MANAGER_SAVE_SESSION_TIMEOUT 2
 
 #define GDM_FLEXISERVER_COMMAND "gdmflexiserver"
 #define GDM_FLEXISERVER_ARGS    "--startnew Standard"
@@ -1199,6 +1200,69 @@ query_end_session_complete (GsmManager *manager)
         end_session_or_show_shell_dialog (manager);
 }
 
+static gboolean
+_client_request_save (GsmClient            *client,
+                      ClientEndSessionData *data)
+{
+        gboolean ret;
+        GError  *error;
+
+        error = NULL;
+        ret = gsm_client_request_save (client, data->flags, &error);
+        if (ret) {
+                g_debug ("GsmManager: adding client to query clients: %s", gsm_client_peek_id (client));
+                data->manager->priv->query_clients = g_slist_prepend (data->manager->priv->query_clients,
+                                                                      client);
+        } else if (error) {
+                g_debug ("GsmManager: unable to query client: %s", error->message);
+                g_error_free (error);
+        }
+
+        return FALSE;
+}
+
+static gboolean
+_client_request_save_helper (const char           *id,
+                             GsmClient            *client,
+                             ClientEndSessionData *data)
+{
+        return _client_request_save (client, data);
+}
+
+static void
+query_save_session_complete (GsmManager *manager)
+{
+        GError *error = NULL;
+
+        if (g_slist_length (manager->priv->next_query_clients) > 0) {
+                ClientEndSessionData data;
+
+                data.manager = manager;
+                data.flags = GSM_CLIENT_END_SESSION_FLAG_LAST;
+
+                g_slist_foreach (manager->priv->next_query_clients,
+                                 (GFunc)_client_request_save,
+                                 &data);
+
+                g_slist_free (manager->priv->next_query_clients);
+                manager->priv->next_query_clients = NULL;
+
+                return;
+        }
+
+        if (manager->priv->query_timeout_id > 0) {
+                g_source_remove (manager->priv->query_timeout_id);
+                manager->priv->query_timeout_id = 0;
+        }
+
+        gsm_session_save (manager->priv->clients, &error);
+
+        if (error) {
+                g_warning ("Error saving session: %s", error->message);
+                g_error_free (error);
+        }
+}
+
 static guint32
 generate_cookie (void)
 {
@@ -1275,6 +1339,21 @@ _on_query_end_session_timeout (GsmManager *manager)
         manager->priv->query_clients = NULL;
 
         query_end_session_complete (manager);
+
+        return FALSE;
+}
+
+static gboolean
+_on_query_save_session_timeout (GsmManager *manager)
+{
+        manager->priv->query_timeout_id = 0;
+
+        g_debug ("GsmManager: query to save session timed out");
+
+        g_slist_free (manager->priv->query_clients);
+        manager->priv->query_clients = NULL;
+
+        query_save_session_complete (manager);
 
         return FALSE;
 }
@@ -1875,12 +1954,31 @@ _handle_client_end_session_response (GsmManager *manager,
                                      gboolean    cancel,
                                      const char *reason)
 {
-        /* just ignore if received outside of shutdown */
-        if (manager->priv->phase < GSM_MANAGER_PHASE_QUERY_END_SESSION) {
+        /* just ignore if we are not yet running */
+        if (manager->priv->phase < GSM_MANAGER_PHASE_RUNNING) {
                 return;
         }
 
         g_debug ("GsmManager: Response from end session request: is-ok=%d do-last=%d cancel=%d reason=%s", is_ok, do_last, cancel, reason ? reason :"");
+
+        if (manager->priv->phase == GSM_MANAGER_PHASE_RUNNING) {
+                /* Ignore responses when no requests were sent */
+                if (manager->priv->query_clients == NULL) {
+                        return;
+                }
+
+                manager->priv->query_clients = g_slist_remove (manager->priv->query_clients, client);
+
+                if (do_last) {
+                        manager->priv->next_query_clients = g_slist_prepend (manager->priv->next_query_clients,
+                                                                             client);
+                }
+
+                if (manager->priv->query_clients == NULL) {
+                        query_save_session_complete (manager);
+                }
+                return;
+        }
 
         if (cancel) {
                 cancel_end_session (manager);
@@ -1996,6 +2094,15 @@ on_xsmp_client_logout_request (GsmXSMPClient *client,
 }
 
 static void
+on_xsmp_client_save_request (GsmXSMPClient *client,
+                             gboolean       show_dialog,
+                             GsmManager    *manager)
+{
+        g_debug ("GsmManager: save_request");
+        gsm_manager_save_session (manager, NULL);
+}
+
+static void
 on_store_client_added (GsmStore   *store,
                        const char *id,
                        GsmManager *manager)
@@ -2020,6 +2127,10 @@ on_store_client_added (GsmStore   *store,
                                   "logout-request",
                                   G_CALLBACK (on_xsmp_client_logout_request),
                                   manager);
+		g_signal_connect (client,
+				  "save-request",
+				  G_CALLBACK (on_xsmp_client_save_request),
+				  manager);
         }
 
         g_signal_connect (client,
@@ -2650,6 +2761,41 @@ user_logout (GsmManager           *manager,
         }
 
         request_logout (manager, mode);
+}
+
+gboolean
+gsm_manager_save_session (GsmManager *manager,
+                          GError     **error)
+{
+        ClientEndSessionData data;
+
+        g_debug ("GsmManager: SaveSession called");
+
+        g_return_val_if_fail (GSM_IS_MANAGER (manager), FALSE);
+
+        if (manager->priv->phase != GSM_MANAGER_PHASE_RUNNING) {
+                g_set_error (error,
+                             GSM_MANAGER_ERROR,
+                             GSM_MANAGER_ERROR_NOT_IN_RUNNING,
+                             "SaveSession interface is only available during the Running phase");
+                return FALSE;
+        }
+
+        data.manager = manager;
+        data.flags = 0;
+        gsm_store_foreach (manager->priv->clients,
+                           (GsmStoreFunc)_client_request_save_helper,
+                           &data);
+
+        if (manager->priv->query_clients) {
+                manager->priv->query_timeout_id = g_timeout_add_seconds (GSM_MANAGER_SAVE_SESSION_TIMEOUT,
+                                                                         (GSourceFunc)_on_query_save_session_timeout,
+                                                                         manager);
+                return TRUE;
+        } else {
+                g_debug ("GsmManager: Nothing to save");
+                return FALSE;
+        }
 }
 
 gboolean

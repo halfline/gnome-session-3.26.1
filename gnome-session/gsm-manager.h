@@ -123,6 +123,9 @@ void                _gsm_manager_set_active_session            (GsmManager     *
 void                _gsm_manager_set_renderer                  (GsmManager     *manager,
                                                                 const char     *renderer);
 
+gboolean            gsm_manager_save_session                   (GsmManager     *manager,
+                                                                GError        **error);
+
 gboolean            gsm_manager_logout                         (GsmManager     *manager,
                                                                 guint           logout_mode,
                                                                 GError        **error);
