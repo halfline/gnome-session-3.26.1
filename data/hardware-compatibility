@@ -26,7 +26,7 @@
 -Gallium .* on NV3[0-9A-F]$
 
 # Old Mesa software GL renderer
--software rasterizer
+#software rasterizer
 
 # Gallium has softpipe; we explicitly enable llvmpipe
 -softpipe
