@@ -43,6 +43,7 @@
 
 #define GSM_MANAGER_SCHEMA        "org.gnome.SessionManager"
 #define KEY_AUTOSAVE_ONE_SHOT     "auto-save-session-one-shot"
+#define DEFAULT_SESSION_NAME      "gnome"
 
 static GtkBuilder *builder;
 static GtkWidget *session_list;
@@ -152,6 +153,23 @@ is_valid_session_name (const char *name)
         return TRUE;
 }
 
+static char *
+get_session_type_from_file (const char *name)
+{
+        char *file;
+        char *type;
+        gboolean loaded;
+
+        file = g_build_filename (g_get_user_config_dir (), "gnome-session", name, "type", NULL);
+        loaded = g_file_get_contents (file, &type, NULL, NULL);
+        g_free (file);
+
+        if (!loaded)
+                return g_strdup (DEFAULT_SESSION_NAME);
+
+        return type;
+}
+
 static void
 populate_session_list (GtkWidget *session_list)
 {
@@ -192,10 +210,15 @@ populate_session_list (GtkWidget *session_list)
         }
 
         while ((name = g_dir_read_name (dir)) != NULL) {
+                char *session_type;
+
                 if (strcmp (name, "saved-session") == 0)
                         continue;
 
+                session_type = get_session_type_from_file (name);
+
                 gtk_list_store_insert_with_values (store, &iter, 100, 0, name, -1);
+                g_free (session_type);
 
                 if (g_strcmp0 (default_name, name) == 0) {
                         GtkTreeSelection *selection;
@@ -285,6 +308,82 @@ remove_session (const char *name)
 
         g_free (path1);
         g_free (path2);
+}
+
+static const char *
+get_session_type_from_switch (void)
+{
+        GtkWidget *mode_switch;
+        gboolean is_classic_mode;
+
+        mode_switch = (GtkWidget *)gtk_builder_get_object (builder, "classic-mode-switch");
+
+        is_classic_mode = gtk_switch_get_active (GTK_SWITCH (mode_switch));
+
+        if (is_classic_mode) {
+                return "gnome-classic";
+        } else {
+                return "gnome";
+        }
+}
+
+static void
+set_mode_switch_from_session_type_file (const char *name)
+{
+        GtkWidget *mode_switch;
+        gboolean is_classic_mode = FALSE;
+        char *type;
+
+        mode_switch = (GtkWidget *)gtk_builder_get_object (builder, "classic-mode-switch");
+
+        type = get_session_type_from_file (name);
+        is_classic_mode = strcmp (type, "gnome-classic") == 0;
+        g_free (type);
+
+        gtk_switch_set_active (GTK_SWITCH (mode_switch), is_classic_mode);
+}
+
+static void
+save_session_type (const char *save_dir,
+                   const char *type)
+{
+        char *file;
+        GError *error;
+
+        file = g_build_filename (save_dir, "type", NULL);
+
+        error = NULL;
+        g_file_set_contents (file, type, strlen (type), &error);
+        if (error != NULL)
+                g_warning ("couldn't save session type to %s: %s",
+                           type, error->message);
+
+        g_free (file);
+}
+
+static void
+save_session_type_from_switch (void)
+{
+        char *name, *path;
+        const char *session_type;
+
+        name = get_selected_session ();
+
+        if (name == NULL) {
+                return;
+        }
+
+        path = get_session_path (name);
+        g_free (name);
+
+        session_type = get_session_type_from_switch ();
+        save_session_type (path, session_type);
+}
+
+static void
+on_mode_switched (GtkSwitch *mode_switch)
+{
+        save_session_type_from_switch ();
 }
 
 static gboolean
@@ -518,6 +617,8 @@ on_selection_changed (GtkTreeSelection *selection,
         if (name == NULL) {
                 return;
         }
+
+        set_mode_switch_from_session_type_file (name);
 
         g_free (name);
 }
@@ -778,6 +879,8 @@ main (int argc, char *argv[])
         g_signal_connect (widget, "clicked", G_CALLBACK (on_rename_session_clicked), NULL);
         widget = (GtkWidget *) gtk_builder_get_object (builder, "continue-button");
         g_signal_connect (widget, "clicked", G_CALLBACK (on_continue_clicked), NULL);
+        widget = (GtkWidget *) gtk_builder_get_object (builder, "classic-mode-switch");
+        g_signal_connect (widget, "notify::active", G_CALLBACK (on_mode_switched), NULL);
 
         g_signal_connect (window, "map", G_CALLBACK (on_map), NULL);
         gtk_widget_show (window);
@@ -798,6 +901,7 @@ main (int argc, char *argv[])
         if (selected_session == NULL) {
 		create_session_and_begin_rename ();
 	} else {
+                set_mode_switch_from_session_type_file (selected_session);
 		g_free (selected_session);
         }
 
@@ -807,6 +911,7 @@ main (int argc, char *argv[])
 
         if (g_strcmp0 (action, "load") == 0) {
                 make_session_current (selected_session);
+                save_session_type_from_switch ();
                 auto_save_next_session_if_needed ();
         } else if (g_strcmp0 (action, "save") == 0) {
                 char *last_session;
@@ -814,6 +919,7 @@ main (int argc, char *argv[])
                 last_session = get_last_session ();
                 make_session_current (selected_session);
                 save_session ();
+                save_session_type_from_switch ();
                 if (last_session != NULL)
                     make_session_current (last_session);
         } else if (g_strcmp0 (action, "print") == 0) {
