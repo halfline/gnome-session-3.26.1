@@ -648,7 +648,17 @@ load_desktop_file (GsmAutostartApp  *app)
 
                 g_free (phase_str);
         } else {
-                phase = GSM_MANAGER_PHASE_APPLICATION;
+                const char *app_id;
+
+                app_id = g_app_info_get_id (G_APP_INFO (app->priv->app_info));
+
+                /* These hardcoded checks are to keep upgrades working */
+                if (app_id != NULL && g_str_has_prefix (app_id, "org.gnome.Shell"))
+                        phase = GSM_MANAGER_PHASE_DISPLAY_SERVER;
+                else if (app_id != NULL && g_str_has_prefix (app_id, "org.gnome.SettingsDaemon"))
+                        phase = GSM_MANAGER_PHASE_INITIALIZATION;
+                else
+                        phase = GSM_MANAGER_PHASE_APPLICATION;
         }
 
         dbus_name = g_desktop_app_info_get_string (app->priv->app_info,
