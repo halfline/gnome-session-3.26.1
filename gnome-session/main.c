@@ -280,6 +280,7 @@ main (int argc, char **argv)
         static char      *opt_session_name = NULL;
         const char       *debug_string = NULL;
         gboolean          gl_failed = FALSE;
+        gboolean          needs_current_desktop_setenv = FALSE;
         guint             name_owner_id;
         GOptionContext   *options;
         static GOptionEntry entries[] = {
@@ -304,12 +305,16 @@ main (int argc, char **argv)
          * set a fallback value if we don't find it set.
          */
         if (g_getenv ("XDG_CURRENT_DESKTOP") == NULL) {
-            g_setenv("XDG_CURRENT_DESKTOP", "GNOME", TRUE);
-            gsm_util_setenv ("XDG_CURRENT_DESKTOP", "GNOME");
+                g_setenv ("XDG_CURRENT_DESKTOP", "GNOME", TRUE);
+                needs_current_desktop_setenv = TRUE;
         }
 
         /* Make sure we initialize gio in a way that does not autostart any daemon */
         initialize_gio ();
+
+        if (needs_current_desktop_setenv) {
+                gsm_util_setenv ("XDG_CURRENT_DESKTOP", "GNOME");
+        }
 
         setlocale (LC_ALL, "");
         bindtextdomain (GETTEXT_PACKAGE, LOCALE_DIR);
