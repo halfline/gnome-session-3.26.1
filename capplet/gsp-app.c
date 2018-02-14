@@ -342,10 +342,11 @@ _gsp_app_user_equal_system (GspApp  *app,
         }
 
         if (g_desktop_app_info_has_key (app_info,
-                                        GSP_KEY_FILE_DESKTOP_KEY_AUTOSTART_ENABLED) &&
-            !g_desktop_app_info_get_boolean (app_info,
-                                             GSP_KEY_FILE_DESKTOP_KEY_AUTOSTART_ENABLED)) {
-                goto out;
+                                        GSP_KEY_FILE_DESKTOP_KEY_AUTOSTART_ENABLED)) {
+                if (app->priv->enabled != g_desktop_app_info_get_boolean (app_info, GSP_KEY_FILE_DESKTOP_KEY_AUTOSTART_ENABLED))
+                        goto out;
+        } else if (!app->priv->enabled) {
+                        goto out;
         }
 
         if (!g_desktop_app_info_get_show_in (app_info, NULL)) {
