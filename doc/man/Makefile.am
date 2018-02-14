@@ -11,6 +11,7 @@ XSLTPROC_FLAGS = \
 
 man_MANS =				\
 	gnome-session.1			\
+	gnome-session-properties.1	\
 	gnome-session-quit.1		\
 	gnome-session-inhibit.1
 

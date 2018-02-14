@@ -1,5 +1,6 @@
 SUBDIRS =			\
 	gnome-session		\
+	capplet			\
 	tools			\
 	data			\
 	doc			\

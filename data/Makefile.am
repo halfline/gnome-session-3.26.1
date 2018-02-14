@@ -24,6 +24,10 @@ wayland_sessiondir = $(datadir)/wayland-sessions
 wayland_session_in_files = gnome.desktop.in
 wayland_session_DATA = $(wayland_session_in_files:.desktop.in=.desktop)
 
+desktopdir = $(datadir)/applications
+desktop_in_files = gnome-session-properties.desktop.in
+desktop_DATA = $(desktop_in_files:.desktop.in=.desktop)
+
 sessiondir = $(datadir)/gnome-session/sessions
 session_in_in_files = gnome.session.desktop.in.in gnome-dummy.session.desktop.in.in
 session_in_files = $(session_in_in_files:.session.desktop.in.in=.session.desktop.in)
@@ -59,9 +63,11 @@ CLEANFILES =					\
 	$(gsettings_SCHEMAS)			\
 	$(xsession_DATA)			\
 	$(wayland_session_DATA)			\
+	$(desktop_DATA)				\
 	$(session_DATA)
 
 DISTCLEANFILES =				\
-	$(gsettings_SCHEMAS)
+	$(gsettings_SCHEMAS)			\
+	$(desktop_in_files)
 
 -include $(top_srcdir)/git.mk
