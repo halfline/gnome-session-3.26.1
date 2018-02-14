@@ -95,6 +95,7 @@ gnome_session_selector_CPPFLAGS =		\
 	$(DISABLE_DEPRECATED_CFLAGS)
 
 gnome_session_selector_LDADD = 			\
+	$(DBUS_GLIB_CFLAGS)			\
 	$(SESSION_SELECTOR_LIBS)
 
 gnome_session_selector_SOURCES = 		\

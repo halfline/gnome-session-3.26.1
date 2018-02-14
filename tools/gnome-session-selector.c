@@ -34,6 +34,13 @@
 #include <glib/gi18n.h>
 #include <glib/gstdio.h>
 
+#include <dbus/dbus-glib.h>
+#include <dbus/dbus-glib-lowlevel.h>
+
+#define GSM_SERVICE_DBUS   "org.gnome.SessionManager"
+#define GSM_PATH_DBUS      "/org/gnome/SessionManager"
+#define GSM_INTERFACE_DBUS "org.gnome.SessionManager"
+
 #define GSM_MANAGER_SCHEMA        "org.gnome.SessionManager"
 #define KEY_AUTOSAVE_ONE_SHOT     "auto-save-session-one-shot"
 
@@ -41,8 +48,10 @@ static GtkBuilder *builder;
 static GtkWidget *session_list;
 static GtkListStore *store;
 static GtkTreeModelSort *sort_model;
+static char *info_text;
 
 static void select_session (const char *name);
+static gboolean make_session_current (const char *name);
 
 static char *
 get_session_path (const char *name)
@@ -76,7 +85,6 @@ is_valid_session_name (const char *name)
 {
         GtkTreeIter iter;
         char *n;
-        const char *info_text;
         char *warning_text;
         gboolean user_tried_dot;
         gboolean user_tried_slash;
@@ -99,7 +107,6 @@ is_valid_session_name (const char *name)
             user_tried_slash = FALSE;
         }
 
-        info_text = _("Please select a custom session to run");
         warning_text = NULL;
         if (user_tried_dot && user_tried_slash) {
             warning_text = g_strdup_printf ("%s\n<small><b>Note:</b> <i>%s</i></small>",
@@ -209,6 +216,24 @@ populate_session_list (GtkWidget *session_list)
 }
 
 static char *
+get_last_session (void)
+{
+        char *saved_session;
+        char last_session[PATH_MAX] = "";
+        char *name = NULL;
+
+        saved_session = get_session_path ("saved-session");
+
+        if (readlink (saved_session, last_session, PATH_MAX - 1) > 0) {
+                name = g_path_get_basename (last_session);
+        }
+
+        g_free (saved_session);
+
+        return name;
+}
+
+static char *
 get_selected_session (void)
 {
         GtkTreeSelection *selection;
@@ -262,6 +287,25 @@ remove_session (const char *name)
         g_free (path2);
 }
 
+static gboolean
+make_session_current (const char *name)
+{
+        char *path1;
+        gboolean ret = TRUE;
+
+        path1 = g_build_filename (g_get_user_config_dir (), "gnome-session", "saved-session", NULL);
+
+        unlink (path1);
+        if (symlink (name, path1) < 0) {
+                g_warning ("Failed to make session '%s' current", name);
+                ret = FALSE;
+        }
+
+        g_free (path1);
+
+        return ret;
+}
+
 static void
 on_remove_session_clicked (GtkButton *button,
                            gpointer   data)
@@ -285,6 +329,7 @@ on_remove_session_clicked (GtkButton *button,
                         gtk_tree_model_get_iter_first (model, &iter);
                         gtk_tree_model_get (model, &iter, 0, &name, -1);
                         select_session (name);
+                        make_session_current (name);
                         g_free (name);
                 }
         }
@@ -344,7 +389,7 @@ create_session (const char *name)
 
         path = get_session_path (name);
 
-        if (mkdir (path, 0755) < 0) {
+        if (g_mkdir_with_parents (path, 0755) < 0) {
                 g_warning ("Failed to create directory %s", path);
         }
         else {
@@ -382,31 +427,18 @@ rename_session (const char *old_name,
 
         if (result < 0) {
                 g_warning ("Failed to rename session from '%s' to '%s': %m", old_name, new_name);
+        } else {
+                char *last_session;
+                last_session = get_last_session ();
+                if (g_strcmp0 (old_name, last_session) == 0) {
+                        make_session_current (new_name);
+                }
+                g_free (last_session);
         }
 
         g_free (old_path);
         g_free (new_path);
-
         return result == 0;
-}
-
-static gboolean
-make_session_current (const char *name)
-{
-        char *path1;
-        gboolean ret = TRUE;
-
-        path1 = g_build_filename (g_get_user_config_dir (), "gnome-session", "saved-session", NULL);
-
-        unlink (path1);
-        if (symlink (name, path1) < 0) {
-                g_warning ("Failed to make session '%s' current", name);
-                ret = FALSE;
-        }
-
-        g_free (path1);
-
-        return ret;
 }
 
 static gboolean
@@ -421,7 +453,7 @@ create_and_select_session (const char *name)
 
         path = g_build_filename (g_get_user_config_dir (), "gnome-session", name, NULL);
         if (!g_file_test (path, G_FILE_TEST_IS_DIR)) {
-                if (mkdir (path, 0755) < 0) {
+                if (g_mkdir_with_parents (path, 0755) < 0) {
                         g_warning ("Failed to create directory %s", path);
                         g_free (path);
                         return FALSE;
@@ -438,8 +470,6 @@ select_session (const char *name)
 {
         GtkTreeIter iter;
         char *n;
-
-        make_session_current (name);
 
         /* now select it in the list */
         gtk_tree_model_get_iter_first (GTK_TREE_MODEL (sort_model), &iter);
@@ -459,8 +489,7 @@ select_session (const char *name)
 }
 
 static void
-on_new_session_clicked (GtkButton *button,
-                        gpointer   data)
+create_session_and_begin_rename (void)
 {
         gchar *name;
 
@@ -469,6 +498,13 @@ on_new_session_clicked (GtkButton *button,
         select_session (name);
 
         begin_rename ();
+}
+
+static void
+on_new_session_clicked (GtkButton *button,
+                        gpointer   data)
+{
+	create_session_and_begin_rename ();
 }
 
 static void
@@ -482,8 +518,6 @@ on_selection_changed (GtkTreeSelection *selection,
         if (name == NULL) {
                 return;
         }
-
-        make_session_current (name);
 
         g_free (name);
 }
@@ -524,7 +558,6 @@ on_row_edited (GtkCellRendererText *cell,
 
                 gtk_list_store_set (store, &items_iter, 0, g_strdup (new_name), -1);
                 g_free (old_name);
-                make_session_current (new_name);
         } else {
                 begin_rename ();
         }
@@ -557,11 +590,6 @@ on_row_activated (GtkTreeView       *tree_view,
                   GtkTreeViewColumn *column,
                   gpointer           data)
 {
-        char *name;
-
-        name = get_selected_session ();
-        g_free (name);
-
         gtk_main_quit ();
 }
 
@@ -589,6 +617,35 @@ auto_save_next_session_if_needed (void)
                 unlink (marker);
         }
         g_free (marker);
+}
+
+static void
+save_session (void)
+{
+        DBusGConnection *conn;
+        DBusGProxy *proxy;
+        GError *error;
+
+        conn = dbus_g_bus_get (DBUS_BUS_SESSION, NULL);
+        if (conn == NULL) {
+                g_warning ("Could not connect to the session bus");
+                return;
+        }
+
+        proxy = dbus_g_proxy_new_for_name (conn, GSM_SERVICE_DBUS, GSM_PATH_DBUS, GSM_INTERFACE_DBUS);
+        if (proxy == NULL) {
+                g_warning ("Could not connect to the session manager");
+                return;
+        }
+
+        error = NULL;
+        if (!dbus_g_proxy_call (proxy, "SaveSession", &error, G_TYPE_INVALID, G_TYPE_INVALID)) {
+                g_warning ("Failed to save session: %s", error->message);
+                g_error_free (error);
+                return;
+        }
+
+        g_object_unref (proxy);
 }
 
 static int
@@ -623,18 +680,53 @@ main (int argc, char *argv[])
 {
         GtkWidget *window;
         GtkWidget *widget;
+        GtkWidget *label;
         GtkCellRenderer *cell;
         GtkTreeViewColumn *column;
         GtkTreeSelection *selection;
         GError *error;
+        char *selected_session;
 
-        if (getenv ("SESSION_MANAGER") != NULL)
+        static char *action = NULL;
+        static char **remaining_args = NULL;
+        static GOptionEntry entries[] = {
+                {"action", '\0', 0, G_OPTION_ARG_STRING, &action, N_("What to do with session selection (save|load|print)"), NULL},
+{ G_OPTION_REMAINING, '\0', 0, G_OPTION_ARG_STRING_ARRAY, &remaining_args, N_("[session-name]"), NULL}
+        };
+
+        if (action == NULL) {
+            if (getenv ("SESSION_MANAGER") != NULL)
+                action = "print";
+            else
+                action = "load";
+        }
+
+        if (getenv ("SESSION_MANAGER") != NULL && strcmp (action, "load") == 0) {
+            g_warning ("Cannot load new session when session currently loaded");
             return 1;
+        }
 
-        gtk_init (&argc, &argv);
-        if (argc > 1) {
-                g_print ("create and select session\n");
-                if (!create_and_select_session (argv[1]))
+        if (getenv ("SESSION_MANAGER") == NULL && strcmp (action, "save") == 0) {
+            g_warning ("Can only save session when session loaded");
+            return 1;
+        }
+
+        if (strcmp (action, "load") != 0 && strcmp (action, "save") != 0 && strcmp (action, "print") != 0) {
+            g_warning ("'%s' is not a supported action.  Supported actions are load, save, and print.\n", action);
+            return 1;
+        }
+
+        error = NULL;
+        gtk_init_with_args (&argc, &argv,
+                            NULL, entries, GETTEXT_PACKAGE, &error);
+
+        if (remaining_args != NULL) {
+                if (g_strv_length (remaining_args) > 1) {
+                        g_warning ("gnome-session-selector takes at most one session argument");
+                        return 1;
+                }
+
+                if (!create_and_select_session (remaining_args[0]))
                         return 1;
                 else
                         return 0;
@@ -690,9 +782,44 @@ main (int argc, char *argv[])
         g_signal_connect (window, "map", G_CALLBACK (on_map), NULL);
         gtk_widget_show (window);
 
+        if (g_strcmp0 (action, "load") == 0) {
+            info_text = _("Please select a custom session to run");
+        } else if (g_strcmp0 (action, "print") == 0) {
+            info_text = _("Please select a session to use");
+        } else if (g_strcmp0 (action, "save") == 0) {
+            info_text = _("Please select a session to save to");
+        }
+
+        label = (GtkWidget*) gtk_builder_get_object (builder, "info-label");
+        gtk_label_set_markup (GTK_LABEL (label), info_text);
+
+        selected_session = get_selected_session ();
+
+        if (selected_session == NULL) {
+		create_session_and_begin_rename ();
+	} else {
+		g_free (selected_session);
+        }
+
         gtk_main ();
 
-        auto_save_next_session_if_needed ();
+        selected_session = get_selected_session ();
+
+        if (g_strcmp0 (action, "load") == 0) {
+                make_session_current (selected_session);
+                auto_save_next_session_if_needed ();
+        } else if (g_strcmp0 (action, "save") == 0) {
+                char *last_session;
+
+                last_session = get_last_session ();
+                make_session_current (selected_session);
+                save_session ();
+                if (last_session != NULL)
+                    make_session_current (last_session);
+        } else if (g_strcmp0 (action, "print") == 0) {
+                g_print ("%s\n", selected_session);
+        }
+        g_free (selected_session);
 
         return 0;
 }

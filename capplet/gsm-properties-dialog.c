@@ -498,8 +498,7 @@ session_saved_cb (DBusGProxy *proxy,
 }
 
 static void
-on_save_session_clicked (GtkWidget           *widget,
-                         GsmPropertiesDialog *dialog)
+save_session_directly (GsmPropertiesDialog *dialog)
 {
         DBusGConnection *conn;
         DBusGProxy *proxy;
@@ -522,6 +521,33 @@ on_save_session_clicked (GtkWidget           *widget,
                 session_saved_message (dialog, _("Failed to save session"), TRUE);
                 g_object_unref (proxy);
                 return;
+        }
+}
+
+static void
+save_session_from_selector (GsmPropertiesDialog *dialog,
+                            const char          *program_path)
+{
+        char *command_line = g_strdup_printf ("%s --action save", program_path);
+
+        g_spawn_command_line_sync (command_line, NULL, NULL, NULL, NULL);
+
+        g_free (command_line);
+}
+
+static void
+on_save_session_clicked (GtkWidget           *widget,
+                         GsmPropertiesDialog *dialog)
+{
+        char *program_path;
+
+        program_path = g_find_program_in_path ("gnome-session-selector");
+
+        if (program_path != NULL) {
+                save_session_from_selector (dialog, program_path);
+                g_free (program_path);
+        } else {
+                save_session_directly (dialog);
         }
 }
 
