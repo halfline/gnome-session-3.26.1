@@ -43,7 +43,7 @@
 
 #define GSM_MANAGER_SCHEMA        "org.gnome.SessionManager"
 #define KEY_AUTOSAVE_ONE_SHOT     "auto-save-session-one-shot"
-#define DEFAULT_SESSION_NAME      "gnome"
+#define DEFAULT_SESSION_NAME      "gnome-classic"
 
 static GtkBuilder *builder;
 static GtkWidget *session_list;
