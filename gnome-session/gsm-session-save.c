@@ -175,13 +175,37 @@ gsm_session_save (GsmStore  *client_store,
                            &data);
 
         if (!*error) {
-                /* remove the old saved session */
-                gsm_session_clear_saved_session (save_dir, data.discard_hash);
+                char *session_dir;
 
-                /* rename the temp session dir */
-                if (g_file_test (save_dir, G_FILE_TEST_IS_DIR))
-                        g_rmdir (save_dir);
-                g_rename (tmp_dir, save_dir);
+                if (g_file_test (save_dir, G_FILE_TEST_IS_SYMLINK))
+                        session_dir = g_file_read_link (save_dir, error);
+                else
+                        session_dir = g_strdup (save_dir);
+
+                if (session_dir != NULL) {
+
+                        char *absolute_session_dir;
+
+                        if (g_path_is_absolute (session_dir)) {
+                                absolute_session_dir = g_strdup (session_dir);
+                        } else {
+                                char *parent_dir;
+
+                                parent_dir = g_path_get_dirname (save_dir);
+                                absolute_session_dir = g_build_filename (parent_dir, session_dir, NULL);
+                                g_free (parent_dir);
+                        }
+                        g_free (session_dir);
+
+                        /* remove the old saved session */
+                        gsm_session_clear_saved_session (absolute_session_dir, data.discard_hash);
+
+                        if (g_file_test (absolute_session_dir, G_FILE_TEST_IS_DIR))
+                                g_rmdir (absolute_session_dir);
+                        g_rename (tmp_dir, absolute_session_dir);
+
+                        g_free (absolute_session_dir);
+                }
         } else {
                 g_warning ("GsmSessionSave: error saving session: %s", (*error)->message);
                 /* FIXME: we should create a hash table filled with the discard
