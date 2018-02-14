@@ -140,6 +140,7 @@ struct GsmManagerPrivate
          * since it uses a sublist of all running client that replied in a
          * specific way */
         GSList                 *next_query_clients;
+        GSList                 *pending_save_invocations;
         /* This is the action that will be done just before we exit */
         GsmManagerLogoutType    logout_type;
 
@@ -1230,6 +1231,37 @@ _client_request_save_helper (const char           *id,
 }
 
 static void
+fail_pending_save_invocations (GsmManager *manager,
+                               GError     *error)
+{
+        GSList *l;
+
+        for (l = manager->priv->pending_save_invocations; l != NULL; l = l->next) {
+                DBusGMethodInvocation *context = l->data;
+
+                dbus_g_method_return_error (context, error);
+        }
+
+        g_slist_free (manager->priv->pending_save_invocations);
+        manager->priv->pending_save_invocations = NULL;
+}
+
+static void
+finish_pending_save_invocations (GsmManager *manager)
+{
+        GSList *l;
+
+        for (l = manager->priv->pending_save_invocations; l != NULL; l = l->next) {
+                DBusGMethodInvocation *context = l->data;
+
+                dbus_g_method_return (context);
+        }
+
+        g_slist_free (manager->priv->pending_save_invocations);
+        manager->priv->pending_save_invocations = NULL;
+}
+
+static void
 query_save_session_complete (GsmManager *manager)
 {
         GError *error = NULL;
@@ -1259,7 +1291,10 @@ query_save_session_complete (GsmManager *manager)
 
         if (error) {
                 g_warning ("Error saving session: %s", error->message);
+                fail_pending_save_invocations (manager, error);
                 g_error_free (error);
+        } else {
+                finish_pending_save_invocations (manager);
         }
 }
 
@@ -2764,20 +2799,22 @@ user_logout (GsmManager           *manager,
 }
 
 gboolean
-gsm_manager_save_session (GsmManager *manager,
-                          GError     **error)
+gsm_manager_save_session (GsmManager            *manager,
+                          DBusGMethodInvocation *context)
 {
         ClientEndSessionData data;
+        GError *error;
 
         g_debug ("GsmManager: SaveSession called");
 
         g_return_val_if_fail (GSM_IS_MANAGER (manager), FALSE);
 
         if (manager->priv->phase != GSM_MANAGER_PHASE_RUNNING) {
-                g_set_error (error,
-                             GSM_MANAGER_ERROR,
-                             GSM_MANAGER_ERROR_NOT_IN_RUNNING,
-                             "SaveSession interface is only available during the Running phase");
+                error = g_error_new (GSM_MANAGER_ERROR,
+                                     GSM_MANAGER_ERROR_NOT_IN_RUNNING,
+                                     "SaveSession interface is only available during the Running phase");
+                dbus_g_method_return_error (context, error);
+                g_error_free (error);
                 return FALSE;
         }
 
@@ -2791,11 +2828,18 @@ gsm_manager_save_session (GsmManager *manager,
                 manager->priv->query_timeout_id = g_timeout_add_seconds (GSM_MANAGER_SAVE_SESSION_TIMEOUT,
                                                                          (GSourceFunc)_on_query_save_session_timeout,
                                                                          manager);
+
+                manager->priv->pending_save_invocations = g_slist_prepend (manager->priv->pending_save_invocations,
+                                                                           context);
+
                 return TRUE;
         } else {
                 g_debug ("GsmManager: Nothing to save");
-                return FALSE;
+                dbus_g_method_return (context);
+                return TRUE;
         }
+
+        return TRUE;
 }
 
 gboolean
