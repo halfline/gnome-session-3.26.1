@@ -11,6 +11,7 @@ data/gnome-dummy.session.desktop.in.in
 data/gnome.session.desktop.in.in
 data/gnome-session-properties.desktop.in.in
 [type: gettext/glade]data/session-selector.ui
+data/session-properties.desktop.in.in
 [type: gettext/glade]data/session-properties.ui
 gnome-session/gsm-fail-whale-dialog.c
 gnome-session/gsm-manager.c

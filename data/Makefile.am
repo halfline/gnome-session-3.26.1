@@ -25,7 +25,7 @@ wayland_session_in_files = gnome.desktop.in
 wayland_session_DATA = $(wayland_session_in_files:.desktop.in=.desktop)
 
 desktopdir = $(datadir)/applications
-desktop_in_files = gnome-session-properties.desktop.in
+desktop_in_files = session-properties.desktop.in
 desktop_DATA = $(desktop_in_files:.desktop.in=.desktop)
 
 sessiondir = $(datadir)/gnome-session/sessions

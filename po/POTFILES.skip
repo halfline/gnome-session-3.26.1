@@ -3,3 +3,4 @@
 # Please keep this file sorted alphabetically.
 data/gnome-dummy.session.desktop.in
 data/gnome.session.desktop.in
+data/session-properties.desktop.in
