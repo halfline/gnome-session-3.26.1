@@ -30,6 +30,7 @@
 
 #include <glib/gi18n.h>
 #include <glib/gstdio.h>
+#include <gio/gdesktopappinfo.h>
 
 #include "gsm-app-dialog.h"
 #include "gsm-properties-dialog.h"
@@ -308,94 +309,91 @@ _gsp_app_user_equal_system (GspApp  *app,
                             char   **system_path)
 {
         GspAppManager *manager;
-        const char    *system_dir;
-        char          *path;
-        char          *str;
-        GKeyFile      *keyfile;
+        gboolean       return_value = FALSE;
+        const char    *system_dir = NULL;
+        char          *path = NULL;
+        char          *str = NULL;
+        GKeyFile      *keyfile = NULL;
+        GDesktopAppInfo *app_info = NULL;
 
         manager = gsp_app_manager_get ();
         system_dir = gsp_app_manager_get_dir (manager,
                                               app->priv->xdg_system_position);
         g_object_unref (manager);
         if (!system_dir) {
-                return FALSE;
+                goto out;
         }
 
         path = g_build_filename (system_dir, app->priv->basename, NULL);
 
         keyfile = g_key_file_new ();
         if (!g_key_file_load_from_file (keyfile, path, G_KEY_FILE_NONE, NULL)) {
-                g_free (path);
-                g_key_file_free (keyfile);
-                return FALSE;
+                goto out;
         }
 
-        if (gsp_key_file_get_boolean (keyfile,
-                                      G_KEY_FILE_DESKTOP_KEY_HIDDEN,
-                                      FALSE) != app->priv->hidden ||
-            gsp_key_file_get_boolean (keyfile,
-                                      GSP_KEY_FILE_DESKTOP_KEY_AUTOSTART_ENABLED,
-                                      TRUE) != app->priv->enabled ||
-            gsp_key_file_get_shown (keyfile,
-                                    gsm_util_get_current_desktop ()) != app->priv->shown) {
-                g_free (path);
-                g_key_file_free (keyfile);
-                return FALSE;
+        app_info = g_desktop_app_info_new_from_keyfile (keyfile);
+
+        if (!app_info) {
+                goto out;
         }
 
-        if (gsp_key_file_get_boolean (keyfile,
-                                      G_KEY_FILE_DESKTOP_KEY_NO_DISPLAY,
-                                      FALSE) != app->priv->no_display) {
-                g_free (path);
-                g_key_file_free (keyfile);
-                return FALSE;
+        if (g_desktop_app_info_get_is_hidden (app_info)) {
+                goto out;
+        }
+
+        if (g_desktop_app_info_has_key (app_info,
+                                        GSP_KEY_FILE_DESKTOP_KEY_AUTOSTART_ENABLED) &&
+            !g_desktop_app_info_get_boolean (app_info,
+                                             GSP_KEY_FILE_DESKTOP_KEY_AUTOSTART_ENABLED)) {
+                goto out;
+        }
+
+        if (!g_desktop_app_info_get_show_in (app_info, NULL)) {
+                goto out;
+        }
+
+        if (g_desktop_app_info_get_nodisplay (app_info)) {
+                goto out;
         }
 
         str = gsp_key_file_get_locale_string (keyfile,
                                               G_KEY_FILE_DESKTOP_KEY_NAME);
         if (!_gsp_str_equal (str, app->priv->name)) {
-                g_free (str);
-                g_free (path);
-                g_key_file_free (keyfile);
-                return FALSE;
+                goto out;
         }
-        g_free (str);
+        g_clear_pointer (&str, g_free);
 
         str = gsp_key_file_get_locale_string (keyfile,
                                               G_KEY_FILE_DESKTOP_KEY_COMMENT);
         if (!_gsp_str_equal (str, app->priv->comment)) {
-                g_free (str);
-                g_free (path);
-                g_key_file_free (keyfile);
-                return FALSE;
+                goto out;
         }
-        g_free (str);
+        g_clear_pointer (&str, g_free);
 
         str = gsp_key_file_get_string (keyfile,
                                        G_KEY_FILE_DESKTOP_KEY_EXEC);
         if (!_gsp_str_equal (str, app->priv->exec)) {
-                g_free (str);
-                g_free (path);
-                g_key_file_free (keyfile);
-                return FALSE;
+                goto out;
         }
-        g_free (str);
+        g_clear_pointer (&str, g_free);
 
         str = gsp_key_file_get_locale_string (keyfile,
                                               G_KEY_FILE_DESKTOP_KEY_ICON);
         if (!_gsp_str_equal (str, app->priv->icon)) {
-                g_free (str);
-                g_free (path);
-                g_key_file_free (keyfile);
-                return FALSE;
+                goto out;
         }
-        g_free (str);
-
-        g_key_file_free (keyfile);
+        g_clear_pointer (&str, g_free);
 
         *system_path = path;
+        path = NULL;
+        return_value = TRUE;
+out:
+        g_clear_pointer (&path, g_free);
+        g_clear_pointer (&str, g_free);
+        g_clear_object (&app_info);
+        g_clear_pointer (&keyfile, g_key_file_free);
 
-        return TRUE;
+        return return_value;
 }
 
 static inline void
@@ -775,6 +773,7 @@ gsp_app_new (const char   *path,
         GspAppManager *manager;
         GspApp        *app;
         GKeyFile      *keyfile;
+        GDesktopAppInfo *app_info;
         char          *basename;
         gboolean       new;
 
@@ -816,6 +815,15 @@ gsp_app_new (const char   *path,
                 return NULL;
         }
 
+        app_info = g_desktop_app_info_new_from_keyfile (keyfile);
+
+        if (!app_info) {
+                g_object_unref (app_info);
+                g_key_file_free (keyfile);
+                g_free (basename);
+                return NULL;
+        }
+
         if (new) {
                 app = g_object_new (GSP_TYPE_APP, NULL);
                 app->priv->basename = basename;
@@ -823,6 +831,7 @@ gsp_app_new (const char   *path,
                 g_free (basename);
                 _gsp_app_free_reusable_data (app);
         }
+
 
         app->priv->path = g_strdup (path);
 
@@ -835,8 +844,7 @@ gsp_app_new (const char   *path,
         app->priv->enabled = gsp_key_file_get_boolean (keyfile,
                                                        GSP_KEY_FILE_DESKTOP_KEY_AUTOSTART_ENABLED,
                                                        TRUE);
-        app->priv->shown = gsp_key_file_get_shown (keyfile,
-                                                   gsm_util_get_current_desktop ());
+        app->priv->shown = g_desktop_app_info_get_show_in (app_info, NULL);
 
         app->priv->name = gsp_key_file_get_locale_string (keyfile,
                                                           G_KEY_FILE_DESKTOP_KEY_NAME);
@@ -868,6 +876,7 @@ gsp_app_new (const char   *path,
                 app->priv->gicon = NULL;
         }
 
+        g_object_unref (app_info);
         g_key_file_free (keyfile);
 
         _gsp_app_update_description (app);
