@@ -22,6 +22,7 @@
 #define __GSM_MANAGER_H
 
 #include <glib-object.h>
+#include <gio/gio.h>
 
 #include "gsm-store.h"
 #include "gsm-manager-logout-mode.h"
@@ -125,7 +126,7 @@ void                _gsm_manager_set_renderer                  (GsmManager     *
                                                                 const char     *renderer);
 
 gboolean            gsm_manager_save_session                   (GsmManager     *manager,
-								DBusGMethodInvocation *context);
+                                                                GDBusMethodInvocation *context);
 
 gboolean            gsm_manager_logout                         (GsmManager     *manager,
                                                                 guint           logout_mode,

@@ -27,13 +27,13 @@
 #include <glib/gi18n.h>
 #include <gtk/gtk.h>
 
+#include <gio/gio.h>
+
 #include "gsm-properties-dialog.h"
 #include "gsm-app-dialog.h"
 #include "gsm-util.h"
 #include "gsp-app.h"
 #include "gsp-app-manager.h"
-#include <dbus/dbus-glib.h>
-#include <dbus/dbus-glib-lowlevel.h>
 
 #define GSM_SERVICE_DBUS   "org.gnome.SessionManager"
 #define GSM_PATH_DBUS      "/org/gnome/SessionManager"
@@ -481,47 +481,49 @@ session_saved_message (GsmPropertiesDialog *dialog,
 }
 
 static void
-session_saved_cb (DBusGProxy *proxy,
-                  DBusGProxyCall *call_id,
-                  void *user_data)
+session_saved_cb (GDBusConnection *conn,
+                  GAsyncResult *result,
+                  gpointer user_data)
 {
-        gboolean res;
+        GVariant *reply;
         GsmPropertiesDialog *dialog = user_data;
+        GError *error = NULL;
 
-        res = dbus_g_proxy_end_call (proxy, call_id, NULL, G_TYPE_INVALID);
-        if (res)
+        reply = g_dbus_connection_call_finish (conn, result, &error);
+        if (error == NULL)
                 session_saved_message (dialog, _("Your session has been saved."), FALSE);
         else
                 session_saved_message (dialog, _("Failed to save session"), TRUE);
 
-        g_object_unref (proxy);
+        g_clear_error (&error);
+
+        g_variant_unref (reply);
 }
 
 static void
 save_session_directly (GsmPropertiesDialog *dialog)
 {
-        DBusGConnection *conn;
-        DBusGProxy *proxy;
-        DBusGProxyCall *call;
+        GDBusConnection *conn;
 
-        conn = dbus_g_bus_get (DBUS_BUS_SESSION, NULL);
+        conn = g_bus_get_sync (G_BUS_TYPE_SESSION, NULL, NULL);
         if (conn == NULL) {
                 session_saved_message (dialog, _("Could not connect to the session bus"), TRUE);
                 return;
         }
 
-        proxy = dbus_g_proxy_new_for_name (conn, GSM_SERVICE_DBUS, GSM_PATH_DBUS, GSM_INTERFACE_DBUS);
-        if (proxy == NULL) {
-                session_saved_message (dialog, _("Could not connect to the session manager"), TRUE);
-                return;
-        }
-
-        call = dbus_g_proxy_begin_call (proxy, "SaveSession", session_saved_cb, dialog, NULL, G_TYPE_INVALID);
-        if (call == NULL) {
-                session_saved_message (dialog, _("Failed to save session"), TRUE);
-                g_object_unref (proxy);
-                return;
-        }
+        g_dbus_connection_call (conn,
+                                GSM_SERVICE_DBUS,
+                                GSM_PATH_DBUS,
+                                GSM_INTERFACE_DBUS,
+                                "SaveSession",
+                                NULL,
+                                NULL,
+                                G_DBUS_CALL_FLAGS_NONE,
+                                -1,
+                                NULL,
+                                (GAsyncReadyCallback)
+                                session_saved_cb,
+                                dialog);
 }
 
 static void

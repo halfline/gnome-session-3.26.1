@@ -1237,9 +1237,9 @@ fail_pending_save_invocations (GsmManager *manager,
         GSList *l;
 
         for (l = manager->priv->pending_save_invocations; l != NULL; l = l->next) {
-                DBusGMethodInvocation *context = l->data;
+                GDBusMethodInvocation *invocation = l->data;
 
-                dbus_g_method_return_error (context, error);
+                g_dbus_method_invocation_return_gerror (invocation, error);
         }
 
         g_slist_free (manager->priv->pending_save_invocations);
@@ -1252,9 +1252,9 @@ finish_pending_save_invocations (GsmManager *manager)
         GSList *l;
 
         for (l = manager->priv->pending_save_invocations; l != NULL; l = l->next) {
-                DBusGMethodInvocation *context = l->data;
+                GDBusMethodInvocation *invocation = l->data;
 
-                dbus_g_method_return (context);
+                g_dbus_method_invocation_return_value (invocation, NULL);
         }
 
         g_slist_free (manager->priv->pending_save_invocations);
@@ -2817,7 +2817,7 @@ user_logout (GsmManager           *manager,
 
 gboolean
 gsm_manager_save_session (GsmManager            *manager,
-                          DBusGMethodInvocation *context)
+                          GDBusMethodInvocation *invocation)
 {
         ClientEndSessionData data;
         GError *error;
@@ -2830,7 +2830,7 @@ gsm_manager_save_session (GsmManager            *manager,
                 error = g_error_new (GSM_MANAGER_ERROR,
                                      GSM_MANAGER_ERROR_NOT_IN_RUNNING,
                                      "SaveSession interface is only available during the Running phase");
-                dbus_g_method_return_error (context, error);
+                g_dbus_method_invocation_return_gerror (invocation, error);
                 g_error_free (error);
                 return FALSE;
         }
@@ -2847,12 +2847,12 @@ gsm_manager_save_session (GsmManager            *manager,
                                                                          manager);
 
                 manager->priv->pending_save_invocations = g_slist_prepend (manager->priv->pending_save_invocations,
-                                                                           context);
+                                                                           invocation);
 
                 return TRUE;
         } else {
                 g_debug ("GsmManager: Nothing to save");
-                dbus_g_method_return (context);
+                g_dbus_method_invocation_return_value (invocation, NULL);
                 return TRUE;
         }
 

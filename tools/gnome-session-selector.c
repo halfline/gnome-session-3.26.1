@@ -34,9 +34,6 @@
 #include <glib/gi18n.h>
 #include <glib/gstdio.h>
 
-#include <dbus/dbus-glib.h>
-#include <dbus/dbus-glib-lowlevel.h>
-
 #define GSM_SERVICE_DBUS   "org.gnome.SessionManager"
 #define GSM_PATH_DBUS      "/org/gnome/SessionManager"
 #define GSM_INTERFACE_DBUS "org.gnome.SessionManager"
@@ -721,32 +718,39 @@ auto_save_next_session_if_needed (void)
 }
 
 static void
+session_saved_cb (GDBusConnection *conn,
+                  GAsyncResult *result)
+{
+        GVariant *reply;
+
+        reply = g_dbus_connection_call_finish (conn, result, NULL);
+
+        g_variant_unref (reply);
+}
+
+static void
 save_session (void)
 {
-        DBusGConnection *conn;
-        DBusGProxy *proxy;
-        GError *error;
+        GDBusConnection *conn;
 
-        conn = dbus_g_bus_get (DBUS_BUS_SESSION, NULL);
+        conn = g_bus_get_sync (G_BUS_TYPE_SESSION, NULL, NULL);
         if (conn == NULL) {
-                g_warning ("Could not connect to the session bus");
                 return;
         }
 
-        proxy = dbus_g_proxy_new_for_name (conn, GSM_SERVICE_DBUS, GSM_PATH_DBUS, GSM_INTERFACE_DBUS);
-        if (proxy == NULL) {
-                g_warning ("Could not connect to the session manager");
-                return;
-        }
-
-        error = NULL;
-        if (!dbus_g_proxy_call (proxy, "SaveSession", &error, G_TYPE_INVALID, G_TYPE_INVALID)) {
-                g_warning ("Failed to save session: %s", error->message);
-                g_error_free (error);
-                return;
-        }
-
-        g_object_unref (proxy);
+        g_dbus_connection_call (conn,
+                                GSM_SERVICE_DBUS,
+                                GSM_PATH_DBUS,
+                                GSM_INTERFACE_DBUS,
+                                "SaveSession",
+                                NULL,
+                                NULL,
+                                G_DBUS_CALL_FLAGS_NONE,
+                                -1,
+                                NULL,
+                                (GAsyncReadyCallback)
+                                session_saved_cb,
+                                NULL);
 }
 
 static int

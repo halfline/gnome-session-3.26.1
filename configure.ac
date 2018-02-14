@@ -48,7 +48,7 @@ AM_CONDITIONAL(BUILD_SESSION_SELECTOR,
                [test "$enable_session_selector" = yes])
 
 if test "$enable_session_selector" = yes; then
-        PKG_CHECK_MODULES(SESSION_SELECTOR, gtk+-3.0 gio-2.0 dbus-glib-1 >= $DBUS_GLIB_REQUIRED)
+        PKG_CHECK_MODULES(SESSION_SELECTOR, gtk+-3.0 gio-2.0)
 fi
 
 dnl ====================================================================
