@@ -1287,7 +1287,7 @@ query_save_session_complete (GsmManager *manager)
                 manager->priv->query_timeout_id = 0;
         }
 
-        gsm_session_save (manager->priv->clients, manager->priv->session_name, &error);
+        gsm_session_save (manager->priv->clients, manager->priv->apps, manager->priv->session_name, &error);
 
         if (error) {
                 g_warning ("Error saving session: %s", error->message);
@@ -1990,7 +1990,7 @@ maybe_save_session (GsmManager *manager)
         }
 
         error = NULL;
-        gsm_session_save (manager->priv->clients, manager->priv->session_name, &error);
+        gsm_session_save (manager->priv->clients, manager->priv->apps, manager->priv->session_name, &error);
 
         if (error) {
                 g_warning ("Error saving session: %s", error->message);
